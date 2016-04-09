@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+
+</head>
+<body>
+<div class="table-responsive">
+    <table id="brandsGrid"></table>
+</div>
+<script>
+
+    $(document).ready(function(){
+        loadParseBrands();
+
+    })
+
+
+
+    function onBrandsCSVUploaded(data){
+        window.startAnimating()
+        for(var i=0;i<data.length;i++)
+        {
+            var jsonObj = data[i];
+            checkForItemOnParse(jsonObj,i,data);
+        }
+
+
+    }
+
+    function checkForItemOnParse(jsonObj,objCount,data){
+        //get existing brands data
+
+        var BrandsClass = Parse.Object.extend(Constans.BRANDS_COLLECTION_NAME);
+        var query = new Parse.Query(BrandsClass);
+        query.limit(Constans.MAX_QUERY_RESULT_LIMIT);
+
+        query.find({
+            success: function(results) {
+                // Do something with the returned Parse.Object values
+                if(results.length == 0)
+                {
+                    //make new - if not found in existing list
+                    var BrandsClass = Parse.Object.extend(Constans.BRANDS_COLLECTION_NAME);
+                    var newObj = new BrandsClass();
+                    for (key in jsonObj) {
+
+                        newObj.set(key, jsonObj[key]);
+
+
+                    }
+
+                    newObj.save(null, {
+                        success: function(newObj) {
+                            //reload view now
+                            if(objCount == data.length - 1)
+                            {
+                                //reload view now
+                                window.loadParseBrands()
+                                window.stopAnimating();
+
+                            }
+                        }
+                    });
+
+
+                }
+                else
+                {
+                    //update if already in the list
+                    for (var i = 0; i < results.length; i++) {
+                        var parseObj = results[i];
+                        for (key in jsonObj) {
+                            if(key == "level" || key == "order")
+                            {
+                                parseObj.set(key, parseInt(jsonObj[key]));
+                            }
+                            else
+                            {
+                                parseObj.set(key, jsonObj[key]);
+                            }
+                        }
+
+                        parseObj.save(null, {
+                            success: function(newObj) {
+                                //reload view now
+                                if(objCount == data.length - 1)
+                                {
+                                    //reload view now
+                                    window.loadParseBrands()
+                                    window.stopAnimating();
+
+                                }
+                            }
+                        });
+
+
+
+
+                    }
+
+                }
+
+            },
+            error: function(error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+        });
+
+    }
+
+
+    function onDeleteAllBrands(){
+        if (confirm("Are you sure you want to delete all brands?")) {
+            // your deletion code
+            //get existing brands data
+            window.startAnimating();
+
+            var BrandsClass = Parse.Object.extend(Constans.BRANDS_COLLECTION_NAME);
+            var query = new Parse.Query(BrandsClass);
+            query.limit(Constans.MAX_QUERY_RESULT_LIMIT);
+            query.find({
+                success: function(results) {
+                    // Do something with the returned Parse.Object values
+                    if(results.length != 0)
+                    {
+                        Parse.Object.destroyAll(results).then(function(success) {
+                            // All the objects were deleted
+                            loadParseBrands()
+                            window.stopAnimating();
+
+                        }, function(error) {
+                            console.error("Oops! Something went wrong: " + error.message + " (" + error.code + ")");
+                        });
+                    }
+                    else
+                    {
+                        window.stopAnimating();
+                    }
+
+                },
+                error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+
+
+
+
+        }
+        return false;
+    }
+
+
+
+
+</script>
+
+</body>
+</html>
