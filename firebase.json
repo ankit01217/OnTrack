@@ -1,0 +1,9 @@
+{
+  "firebase": "etc-ontrack",
+  "public": "public",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}
